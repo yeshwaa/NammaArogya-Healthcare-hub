@@ -8,35 +8,62 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Healthcare Design System */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 215 25% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Medical Blue Primary */
+    --primary: 210 70% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 210 70% 55%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Wellness Green Secondary */
+    --secondary: 150 40% 95%;
+    --secondary-foreground: 150 60% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Calm backgrounds */
+    --muted: 210 30% 96%;
+    --muted-foreground: 215 15% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Warm accent for engagement */
+    --accent: 25 85% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 210 25% 88%;
+    --input: 210 25% 88%;
+    --ring: 210 70% 45%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Custom Healthcare Tokens */
+    --medical-blue: 210 70% 45%;
+    --medical-blue-light: 210 70% 55%;
+    --medical-blue-dark: 210 70% 35%;
+    
+    --wellness-green: 150 50% 50%;
+    --wellness-green-light: 150 50% 85%;
+    
+    --trust-gradient: linear-gradient(135deg, hsl(var(--medical-blue)), hsl(var(--medical-blue-light)));
+    --wellness-gradient: linear-gradient(135deg, hsl(var(--wellness-green-light)), hsl(var(--wellness-green)));
+    --hero-gradient: linear-gradient(135deg, hsl(var(--medical-blue)) 0%, hsl(var(--wellness-green)) 100%);
+    
+    --shadow-medical: 0 10px 40px -10px hsl(var(--medical-blue) / 0.15);
+    --shadow-wellness: 0 8px 25px -8px hsl(var(--wellness-green) / 0.15);
+    --shadow-glow: 0 0 30px hsl(var(--primary-glow) / 0.3);
+    
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
