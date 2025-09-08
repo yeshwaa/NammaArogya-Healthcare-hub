@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { User, Session } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
+// Get Supabase configuration from environment
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+// Create Supabase client only if credentials are available
+const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 export interface Profile {
   id: string;
@@ -27,6 +31,12 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Only proceed if Supabase client is available
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -52,9 +62,11 @@ export const useAuth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
 
   const fetchProfile = async (userId: string) => {
+    if (!supabase) return;
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -74,6 +86,10 @@ export const useAuth = () => {
   };
 
   const signUp = async (email: string, password: string, fullName: string, userType: 'patient' | 'doctor' = 'patient') => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase not configured. Please check your environment variables.') };
+    }
+
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -94,6 +110,10 @@ export const useAuth = () => {
   };
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase not configured. Please check your environment variables.') };
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -108,6 +128,10 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
+    if (!supabase) {
+      return { error: new Error('Supabase not configured.') };
+    }
+
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -118,6 +142,10 @@ export const useAuth = () => {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase not configured.') };
+    }
+
     try {
       if (!user) throw new Error('No user logged in');
 
