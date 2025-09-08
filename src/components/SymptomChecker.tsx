@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Search,
   Brain,
@@ -10,12 +12,18 @@ import {
   ArrowRight,
   Thermometer,
   Heart,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
 
 const SymptomChecker = () => {
   const [symptoms, setSymptoms] = useState("");
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  
+  const { user, supabase } = useAuth();
+  const { toast } = useToast();
 
   const commonSymptoms = [
     { name: "Headache", severity: "mild", icon: Brain },
@@ -38,6 +46,54 @@ const SymptomChecker = () => {
         ? prev.filter(s => s !== symptom)
         : [...prev, symptom]
     );
+  };
+
+  const analyzeSymptoms = async () => {
+    if (!user) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to use the AI symptom checker',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!symptoms && selectedSymptoms.length === 0) {
+      toast({
+        title: 'No symptoms provided',
+        description: 'Please describe your symptoms or select from the list',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-symptom-analysis', {
+        body: {
+          symptoms: selectedSymptoms,
+          description: symptoms,
+          patientHistory: {}
+        }
+      });
+
+      if (error) throw error;
+      setAnalysis(data);
+      
+      toast({
+        title: 'Analysis complete',
+        description: 'AI has analyzed your symptoms',
+      });
+    } catch (error) {
+      console.error('Error analyzing symptoms:', error);
+      toast({
+        title: 'Analysis failed',
+        description: 'Could not analyze symptoms. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -114,17 +170,87 @@ const SymptomChecker = () => {
                   variant="medical" 
                   size="lg" 
                   className="flex-1"
-                  disabled={!symptoms && selectedSymptoms.length === 0}
+                  disabled={(!symptoms && selectedSymptoms.length === 0) || loading}
+                  onClick={analyzeSymptoms}
                 >
-                  <Brain className="w-5 h-5 mr-2" />
-                  Analyze Symptoms
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {loading ? (
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  ) : (
+                    <Brain className="w-5 h-5 mr-2" />
+                  )}
+                  {loading ? 'Analyzing...' : 'Analyze Symptoms'}
+                  {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
                 </Button>
                 <Button variant="outline" size="lg">
                   <AlertCircle className="w-5 h-5 mr-2" />
                   Emergency Help
                 </Button>
               </div>
+
+              {analysis && (
+                <Card className="mt-6 bg-gradient-to-r from-primary/5 to-accent/5">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Brain className="w-6 h-6 text-primary" />
+                      AI Analysis Results
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {analysis.possibleConditions && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Possible Conditions:</h4>
+                        <div className="space-y-2">
+                          {analysis.possibleConditions.map((condition: any, idx: number) => (
+                            <div key={idx} className="bg-card rounded-lg p-3 border">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="font-medium">{condition.condition}</p>
+                                  <p className="text-sm text-muted-foreground">{condition.description}</p>
+                                </div>
+                                <span className="text-sm font-medium text-primary">{condition.probability}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {analysis.recommendedActions && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Recommended Actions:</h4>
+                        <ul className="space-y-1">
+                          {analysis.recommendedActions.map((action: string, idx: number) => (
+                            <li key={idx} className="flex items-start gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                              <span className="text-sm">{action}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {analysis.homeRemedies && analysis.homeRemedies.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold mb-2">Suggested Home Remedies:</h4>
+                        <div className="space-y-2">
+                          {analysis.homeRemedies.map((remedy: any, idx: number) => (
+                            <div key={idx} className="bg-card rounded-lg p-3 border border-green-200">
+                              <p className="font-medium text-green-800">{remedy.remedy}</p>
+                              <p className="text-sm text-muted-foreground">{remedy.instructions}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="bg-destructive/10 rounded-lg p-3 border border-destructive/20">
+                      <p className="text-sm font-medium text-destructive">
+                        {analysis.disclaimer || 'This AI analysis is for informational purposes only and should not replace professional medical advice.'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
                 <div className="flex items-start space-x-3">
