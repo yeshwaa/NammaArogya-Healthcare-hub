@@ -5,23 +5,34 @@ import SymptomChecker from "@/components/SymptomChecker";
 import VoiceInterface from "@/components/VoiceInterface";
 import { ConsultationBooking } from "@/components/consultation/ConsultationBooking";
 import { HomeRemedies } from "@/components/remedies/HomeRemedies";
+import { HealthTracking } from "@/components/tracking/HealthTracking";
+import { HealthChat } from "@/components/chat/HealthChat";
 import { SupabaseSetupAlert } from "@/components/SupabaseSetupAlert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { supabase } = useAuth();
+  const servicesRef = useRef<HTMLElement>(null);
+
+  const handleFeatureClick = (tab: string) => {
+    setActiveTab(tab);
+    // Scroll to services section
+    setTimeout(() => {
+      servicesRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <HealthcareHeader />
       <main>
         <HeroSection />
-        <FeaturesGrid />
+        <FeaturesGrid onFeatureClick={handleFeatureClick} />
         
-        <section className="py-20 bg-muted/30">
+        <section ref={servicesRef} className="py-20 bg-muted/30">
             <div className="container mx-auto px-4">
               {!supabase && <SupabaseSetupAlert />}
               
@@ -35,11 +46,13 @@ const Index = () => {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-6xl mx-auto">
-              <TabsList className="grid w-full grid-cols-4 mb-8">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-6 mb-8">
+                <TabsTrigger value="overview">Natural Remedies</TabsTrigger>
                 <TabsTrigger value="symptoms">Symptom Checker</TabsTrigger>
                 <TabsTrigger value="voice">Voice Assistant</TabsTrigger>
                 <TabsTrigger value="consultation">Consultations</TabsTrigger>
+                <TabsTrigger value="chat">Real-time Chat</TabsTrigger>
+                <TabsTrigger value="tracking">Health Tracking</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-8">
@@ -56,6 +69,14 @@ const Index = () => {
 
               <TabsContent value="consultation">
                 <ConsultationBooking />
+              </TabsContent>
+
+              <TabsContent value="chat">
+                <HealthChat />
+              </TabsContent>
+
+              <TabsContent value="tracking">
+                <HealthTracking />
               </TabsContent>
             </Tabs>
           </div>

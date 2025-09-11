@@ -11,7 +11,11 @@ import {
   Shield
 } from "lucide-react";
 
-const FeaturesGrid = () => {
+interface FeaturesGridProps {
+  onFeatureClick: (tab: string) => void;
+}
+
+const FeaturesGrid = ({ onFeatureClick }: FeaturesGridProps) => {
   const features = [
     {
       icon: Brain,
@@ -20,6 +24,7 @@ const FeaturesGrid = () => {
       buttonText: "Check Symptoms",
       variant: "medical" as const,
       bgColor: "bg-medical-blue/5 hover:bg-medical-blue/10",
+      tab: "symptoms",
     },
     {
       icon: Leaf,
@@ -28,6 +33,7 @@ const FeaturesGrid = () => {
       buttonText: "Browse Remedies",
       variant: "wellness" as const,
       bgColor: "bg-wellness-green-light/30 hover:bg-wellness-green-light/50",
+      tab: "overview",
     },
     {
       icon: Video,
@@ -36,6 +42,7 @@ const FeaturesGrid = () => {
       buttonText: "Book Now",
       variant: "medical" as const,
       bgColor: "bg-primary/5 hover:bg-primary/10",
+      tab: "consultation",
     },
     {
       icon: Mic,
@@ -44,6 +51,7 @@ const FeaturesGrid = () => {
       buttonText: "Try Voice",
       variant: "wellness" as const,
       bgColor: "bg-accent/10 hover:bg-accent/20",
+      tab: "voice",
     },
     {
       icon: MessageCircle,
@@ -52,6 +60,7 @@ const FeaturesGrid = () => {
       buttonText: "Start Chat",
       variant: "medical" as const,
       bgColor: "bg-medical-blue/5 hover:bg-medical-blue/10",
+      tab: "chat",
     },
     {
       icon: Activity,
@@ -60,6 +69,7 @@ const FeaturesGrid = () => {
       buttonText: "Track Health",
       variant: "wellness" as const,
       bgColor: "bg-wellness-green-light/30 hover:bg-wellness-green-light/50",
+      tab: "tracking",
     },
   ];
 
@@ -95,7 +105,11 @@ const FeaturesGrid = () => {
                 <p className="text-muted-foreground leading-relaxed">
                   {feature.description}
                 </p>
-                <Button variant={feature.variant} className="w-full">
+                <Button 
+                  variant={feature.variant} 
+                  className="w-full"
+                  onClick={() => onFeatureClick(feature.tab)}
+                >
                   {feature.buttonText}
                 </Button>
               </CardContent>
