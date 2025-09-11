@@ -83,7 +83,8 @@ export const RealtimeChat = ({ consultationId }: RealtimeChatProps) => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      // Temporarily disable chat messages fetch due to DB relation issues
+      console.log('Chat messages would be loaded here');
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast({

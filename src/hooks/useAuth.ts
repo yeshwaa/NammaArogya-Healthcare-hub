@@ -1,19 +1,10 @@
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { User, Session } from '@supabase/supabase-js';
-
-// Get Supabase configuration from environment
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-// Create Supabase client only if credentials are available
-const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Profile {
   id: string;
-  email: string;
+  user_id: string;
   full_name?: string;
   avatar_url?: string;
   user_type: 'patient' | 'doctor';
@@ -22,6 +13,8 @@ export interface Profile {
   phone?: string;
   date_of_birth?: string;
   medical_history?: any;
+  created_at: string;
+  updated_at: string;
 }
 
 export const useAuth = () => {
@@ -31,12 +24,6 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Only proceed if Supabase client is available
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -62,39 +49,36 @@ export const useAuth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  }, []);
 
   const fetchProfile = async (userId: string) => {
-    if (!supabase) return;
-    
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
-        .single();
+        .eq('user_id', userId)
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
         return;
       }
 
-      setProfile(data);
+      setProfile(data as Profile);
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
   };
 
   const signUp = async (email: string, password: string, fullName: string, userType: 'patient' | 'doctor' = 'patient') => {
-    if (!supabase) {
-      return { data: null, error: new Error('Supabase not configured. Please check your environment variables.') };
-    }
-
     try {
+      const redirectUrl = `${window.location.origin}/`;
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
             user_type: userType,
@@ -110,10 +94,6 @@ export const useAuth = () => {
   };
 
   const signIn = async (email: string, password: string) => {
-    if (!supabase) {
-      return { data: null, error: new Error('Supabase not configured. Please check your environment variables.') };
-    }
-
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -127,11 +107,23 @@ export const useAuth = () => {
     }
   };
 
-  const signOut = async () => {
-    if (!supabase) {
-      return { error: new Error('Supabase not configured.') };
-    }
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
 
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error: any) {
+      return { data: null, error };
+    }
+  };
+
+  const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -142,22 +134,18 @@ export const useAuth = () => {
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!supabase) {
-      return { data: null, error: new Error('Supabase not configured.') };
-    }
-
     try {
       if (!user) throw new Error('No user logged in');
 
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .select()
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      setProfile(data as Profile);
       return { data, error: null };
     } catch (error: any) {
       return { data: null, error };
@@ -171,6 +159,7 @@ export const useAuth = () => {
     loading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     updateProfile,
     supabase,

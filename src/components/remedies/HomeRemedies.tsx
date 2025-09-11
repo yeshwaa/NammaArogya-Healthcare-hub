@@ -39,14 +39,32 @@ export const HomeRemedies = () => {
 
   const fetchRemedies = async () => {
     try {
-      const { data, error } = await supabase
-        .from('home_remedies')
-        .select('*')
-        .eq('is_verified', true)
-        .order('effectiveness_rating', { ascending: false });
-
-      if (error) throw error;
-      setRemedies(data || []);
+      // For now, using mock data since home_remedies table doesn't exist
+      const mockRemedies: HomeRemedy[] = [
+        {
+          id: '1',
+          title: 'Honey and Ginger Tea',
+          description: 'Natural remedy for sore throat and cough',
+          ingredients: ['1 tbsp honey', '1 inch fresh ginger', '1 cup hot water'],
+          instructions: ['Grate ginger', 'Add to hot water', 'Steep for 5 minutes', 'Add honey and drink warm'],
+          conditions: ['sore throat', 'cough', 'cold'],
+          difficulty_level: 'easy',
+          preparation_time: '10 minutes',
+          effectiveness_rating: 4.5
+        },
+        {
+          id: '2', 
+          title: 'Turmeric Milk',
+          description: 'Anti-inflammatory drink for joint pain and immunity',
+          ingredients: ['1 cup warm milk', '1/2 tsp turmeric powder', '1 tsp honey'],
+          instructions: ['Heat milk gently', 'Mix turmeric in warm milk', 'Add honey', 'Drink before bedtime'],
+          conditions: ['joint pain', 'inflammation', 'immunity'],
+          difficulty_level: 'easy',
+          preparation_time: '5 minutes',
+          effectiveness_rating: 4.3
+        }
+      ];
+      setRemedies(mockRemedies);
     } catch (error) {
       console.error('Error fetching remedies:', error);
       // Fallback to mock data if database is not set up
