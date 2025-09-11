@@ -100,9 +100,12 @@ export const HomeRemedies = () => {
 
   const getAllConditions = () => {
     const conditions = new Set<string>();
-    remedies.forEach(remedy => {
-      remedy.conditions.forEach(condition => conditions.add(condition));
-    });
+    // Add null check to prevent forEach error when remedies is undefined
+    if (remedies && remedies.length > 0) {
+      remedies.forEach(remedy => {
+        remedy.conditions?.forEach(condition => conditions.add(condition));
+      });
+    }
     return Array.from(conditions).sort();
   };
 
