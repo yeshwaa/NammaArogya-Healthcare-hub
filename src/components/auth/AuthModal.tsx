@@ -23,7 +23,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     userType: 'patient' as 'patient' | 'doctor',
   });
 
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp } = useAuth();
   const { toast } = useToast();
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -81,34 +81,6 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    try {
-      const { error } = await signInWithGoogle();
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Redirecting to Google...",
-        });
-        onClose();
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
@@ -160,26 +132,6 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
-            
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-            
-            <Button 
-              onClick={handleGoogleSignIn} 
-              variant="outline" 
-              className="w-full" 
-              disabled={loading}
-            >
-              Continue with Google
-            </Button>
           </TabsContent>
 
           <TabsContent value="signup" className="space-y-4">
