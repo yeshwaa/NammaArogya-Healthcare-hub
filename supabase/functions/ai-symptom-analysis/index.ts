@@ -63,7 +63,7 @@ IMPORTANT: Always include a disclaimer that this is not a substitute for profess
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -74,12 +74,27 @@ IMPORTANT: Always include a disclaimer that this is not a substitute for profess
             content: prompt
           }
         ],
-        max_completion_tokens: 1500
+        temperature: 0.3,
+        max_tokens: 1500
       })
     })
 
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`OpenAI API error: ${errText}`);
+    }
+
     const aiResponse = await response.json()
-    const analysis = JSON.parse(aiResponse.choices[0].message.content)
+
+    let content = aiResponse?.choices?.[0]?.message?.content || ''
+    let analysis: any
+    try {
+      // Try to extract pure JSON (handles code fences)
+      const jsonMatch = content.match(/\{[\s\S]*\}/)
+      analysis = JSON.parse(jsonMatch ? jsonMatch[0] : content)
+    } catch (_) {
+      throw new Error('AI returned an unexpected format. Please try again.')
+    }
 
     // Store the analysis in Supabase
     const supabaseClient = createClient(
