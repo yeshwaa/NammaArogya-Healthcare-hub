@@ -151,6 +151,39 @@ export type Database = {
         }
         Relationships: []
       }
+      symptom_reports: {
+        Row: {
+          ai_analysis: Json | null
+          created_at: string
+          id: string
+          severity_score: number | null
+          symptom_description: string | null
+          symptoms: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          created_at?: string
+          id?: string
+          severity_score?: number | null
+          symptom_description?: string | null
+          symptoms: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          created_at?: string
+          id?: string
+          severity_score?: number | null
+          symptom_description?: string | null
+          symptoms?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
