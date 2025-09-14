@@ -63,7 +63,7 @@ IMPORTANT: Always include a disclaimer that this is not a substitute for profess
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           {
             role: 'system',
@@ -74,8 +74,7 @@ IMPORTANT: Always include a disclaimer that this is not a substitute for profess
             content: prompt
           }
         ],
-        temperature: 0.3,
-        max_tokens: 1500
+        max_completion_tokens: 1500
       })
     })
 
