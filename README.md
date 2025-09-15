@@ -2,7 +2,7 @@
 
 
 
-**URL**: https://lovable.dev/projects/269514f4-2bd1-4db0-8a06-19321f48a279
+**URL**: https://github.com/yeshwaanth/NammaArogya-Healthcare-hub.git
 
 ## How can I edit this code?
 
