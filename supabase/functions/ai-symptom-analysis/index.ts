@@ -12,7 +12,18 @@ serve(async (req) => {
   }
 
   try {
-    const { symptoms, description, patientHistory } = await req.json()
+    const body = await req.json().catch(() => ({}));
+    const symptomsInput = Array.isArray(body.symptoms) ? body.symptoms : [];
+    const symptoms = symptomsInput.map((s: any) => String(s).trim()).filter(Boolean);
+    const description = typeof body.description === 'string' ? body.description : '';
+    const patientHistory = body.patientHistory ?? {};
+
+    if (symptoms.length === 0 && !description) {
+      return new Response(
+        JSON.stringify({ error: 'Please provide at least one symptom or a description.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
     
     // Get OpenAI API key from Supabase secrets
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
@@ -64,18 +75,16 @@ IMPORTANT: Always include a disclaimer that this is not a substitute for profess
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
+        response_format: { type: 'json_object' },
         messages: [
           {
             role: 'system',
-            content: 'You are a knowledgeable medical AI that provides helpful symptom analysis while emphasizing the importance of professional medical care.'
+            content: 'You are a knowledgeable medical AI that provides helpful symptom analysis while emphasizing the importance of professional medical care. Return ONLY valid JSON with no extra commentary.'
           },
-          {
-            role: 'user',
-            content: prompt
-          }
+          { role: 'user', content: prompt }
         ],
-        temperature: 0.3,
-        max_tokens: 1500
+        temperature: 0.2,
+        max_tokens: 1200
       })
     })
 
@@ -86,14 +95,21 @@ IMPORTANT: Always include a disclaimer that this is not a substitute for profess
 
     const aiResponse = await response.json()
 
-    let content = aiResponse?.choices?.[0]?.message?.content || ''
-    let analysis: any
+    let content = aiResponse?.choices?.[0]?.message?.content || '';
+    let analysis: any;
     try {
-      // Try to extract pure JSON (handles code fences)
-      const jsonMatch = content.match(/\{[\s\S]*\}/)
-      analysis = JSON.parse(jsonMatch ? jsonMatch[0] : content)
-    } catch (_) {
-      throw new Error('AI returned an unexpected format. Please try again.')
+      // Preferred: direct JSON when response_format is enforced
+      analysis = JSON.parse(content);
+    } catch {
+      try {
+        // Fallbacks: code-fenced JSON or first JSON object
+        const fence = content.match(/```json([\s\S]*?)```/i) || content.match(/```([\s\S]*?)```/);
+        const candidate = fence ? fence[1] : (content.match(/\{[\s\S]*\}/)?.[0] || '');
+        analysis = JSON.parse(candidate);
+      } catch (err) {
+        console.error('Failed to parse AI response into JSON:', { contentPreview: content.slice(0, 400) });
+        throw new Error('The AI response could not be parsed. Please try again.');
+      }
     }
 
     // Store the analysis in Supabase
@@ -130,12 +146,14 @@ IMPORTANT: Always include a disclaimer that this is not a substitute for profess
         status: 200,
       },
     )
-  } catch (error) {
+  } catch (error: any) {
+    console.error('ai-symptom-analysis error:', error?.message || error, error);
+    const status = error?.message?.includes('OpenAI API error') ? 502 : 400;
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error?.message || 'Unknown error' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status,
       },
     )
   }
